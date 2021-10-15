@@ -1,4 +1,5 @@
 import javax.naming.OperationNotSupportedException;
+import java.util.PriorityQueue;
 
 /**
  * A basic Java agent to play in Resistance.
@@ -20,7 +21,7 @@ public class SimpleReflexAgent{
 	private int[] spyList;
 
 	public SimpleReflexAgent(){
-		this.name == "simpleReflex" + agentCount;
+		this.name = "simpleReflex" + agentCount;
 		agentCount++;
 	}
 
@@ -83,10 +84,16 @@ public class SimpleReflexAgent{
 		int[] team = new int[teamsize];
 
 		if (!isSpy){
-			int[][] sortedSafetyLevel = new int[numPlayers][2];
+			int[][] safetyLevelWithPlayer = new int[numPlayers][2];
 			for (int i = 0; i < numPlayers; i++){
-				sortedSafetyLevel[i][0] = i;
-				sortedSafetyLevel[i][1] = safetyLevel[i];
+				safetyLevelWithPlayer[i][0] = i;
+				safetyLevelWithPlayer[i][1] = safetyLevel[i];
+			}
+
+			PriorityQueue<int[]> safetyLevelPQ = new PriorityQueue<int[]>((a, b) -> b[1] - a[1]);
+
+			for (int i = 0; i < teamsize; i++){
+				team[i] = safetyLevelPQ.poll()[0];
 			}
 		}
 
