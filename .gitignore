@@ -1,2 +1,9 @@
 skeletons
 .DS_Store
+Agent.class
+Game.class
+Game$Mission.class
+Game$Round.class
+RandomAgent.class
+BasicAgent.class
+SimpleReflexAgent.class

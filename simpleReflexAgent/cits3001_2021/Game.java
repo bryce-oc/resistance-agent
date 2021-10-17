@@ -19,7 +19,7 @@ public class Game{
   private static final int[][] missionNum = {{2,3,2,3,3},{2,3,4,3,4},{2,3,3,4,4},{3,4,4,5,5},{3,4,4,5,5},{3,4,4,5,5}};
                                     //missionNum[n-5][i] is the number to send on mission i in a  in an n player game
   private Random rand;
-  private RandomAgent backup;
+  private SimpleReflexAgent backup;
   private File logFile;
   private boolean logging = false;
   private boolean started = false;
@@ -85,8 +85,8 @@ public class Game{
       players[i].newGame(players.length, i, spyCopy);
     }
     log("Game set up. Spys allocated");
-    //allocate RandomAgent to substitute bad moves
-    backup = new RandomAgent("backup");
+    //allocate SimpleReflexAgent to substitute bad moves
+    backup = new SimpleReflexAgent("backup");
     backup.newGame(players.length, 0, spies);
     rounds = new Round[5];
     for(round = 0; round<5; round++)
@@ -259,11 +259,11 @@ public class Game{
    * Sets up game with random agents and plays
    **/
   public static void main(String[] args){
-    Agent[] agents = {RandomAgent.init(),
-      RandomAgent.init(), 
-      RandomAgent.init(),
-      RandomAgent.init(), 
-      RandomAgent.init()};
+    Agent[] agents = {SimpleReflexAgent.init(),
+      SimpleReflexAgent.init(), 
+      SimpleReflexAgent.init(),
+      SimpleReflexAgent.init(), 
+      SimpleReflexAgent.init()};
     Game game = new Game(agents);
 
   }    
