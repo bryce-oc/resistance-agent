@@ -13,6 +13,7 @@ public class SimpleReflexAgent implements Agent{
 	private static int agentCount;
 
 	private int roundNum;
+	private int missionsFailed;
 	private int numPlayers;
 	private int numSpies;
 	private boolean isSpy;
@@ -20,15 +21,23 @@ public class SimpleReflexAgent implements Agent{
 
 	private int[] safetyLevel;
 
+	private boolean prevVoteFailed;
+	private int[] prevMission;
+	private boolean[] prevVotes;
+	private int prevLeader;
+
 	// ONLY USED WHEN PLAYING AS A SPY
+	private Random random;
 	private boolean[] spiesBool;
 	private int[] spyList;
 
 	public SimpleReflexAgent(int agentCount){
+		random = new Random();
 		this.name = "simpleReflex" + agentCount;
 	}
 
 	public SimpleReflexAgent(String name){
+		random = new Random();
 		this.name = name;
 	}
 
@@ -61,6 +70,7 @@ public class SimpleReflexAgent implements Agent{
 		int[] spyNum = {2,2,3,3,3,4}; //spyNum[n-5] is the number of spies in an n player game
 
 		roundNum = 1;
+		missionsFailed = 0;
 		myIndex = playerIndex;
 		this.numPlayers = numPlayers;
 		numSpies = spyNum[numPlayers - 5];
@@ -86,7 +96,7 @@ public class SimpleReflexAgent implements Agent{
 			safetyLevel[i] = 0;
 		}
 
-		if (getName().equals("simpleReflex1")) printSafetyLevels();
+		if (getName().equals("simpleReflex0")) printSafetyLevels();
 	}
 
 	/**
@@ -111,6 +121,8 @@ public class SimpleReflexAgent implements Agent{
 	 * @return true is this agent votes that the mission should go ahead, false otherwise.
 	 * **/
 	public boolean vote(int[] mission, int leader){
+		if (getName().equals("simpleReflex0")) printSafetyLevels();
+
 		if (!isSpy){
 			int[] sortedAgents = sortAgents();
 
@@ -145,11 +157,7 @@ public class SimpleReflexAgent implements Agent{
 			else return true;
 		}
 		else {
-			int spiesOnTeam = 0;
-
-			for (int i = 0; i < mission.length; i++){
-				if (spiesBool[mission[i]]) spiesOnTeam++;
-			}
+			int spiesOnTeam = spiesOnTeam(mission);
 
 			if (spiesOnTeam == 1) return true;
 			else                  return false;
@@ -164,7 +172,13 @@ public class SimpleReflexAgent implements Agent{
 	 * @param votes an array of booleans such that votes[i] is true if and only if agent i voted for the mission to go ahead.
 	 * **/
 	public void voteOutcome(int[] mission, int leader, boolean[] votes){
-		//TODO
+		if (prevVoteFailed) {
+			// do some calculations
+		}
+
+		prevMission = mission;
+		prevLeader = leader;
+		prevVotes = votes;
 	}
 
 	/**
@@ -175,7 +189,78 @@ public class SimpleReflexAgent implements Agent{
 	* **/
 	public boolean betray(int[] mission, int leader){
 		//TODO
-		return true;
+		int spiesOnTeam = spiesOnTeam(mission);
+		int failsRequired = failsRequired();
+
+		//if there are too few spies on the mission to make it fail, none of them should fail it
+		if (spiesOnTeam < failsRequired) return false;
+
+		// if EVERY mission from now on must be failed:
+		if ((6 - roundNum) == (3 - missionsFailed)) {
+			if (spiesOnTeam == 1) return true;
+			
+			if (failsRequired == 1){
+				if (spiesOnTeam == 2) {
+					if (random.nextInt(5) < 4) return true;
+					else return false;
+				}
+				else if (spiesOnTeam == 3) {
+					if (random.nextInt(5) < 3) return true;
+					else return false;
+				}
+				else if (spiesOnTeam == 4) {
+					if (random.nextInt(2) < 1) return true;
+					else return false;
+				}
+			}
+			else if (failsRequired == 2){
+				if (spiesOnTeam == 2) return true;
+				
+				else if (spiesOnTeam == 3) {
+					if (random.nextInt(6) < 5) return true;
+					else return false;
+				}
+				else if (spiesOnTeam == 4) {
+					if (random.nextInt(5) < 4) return true;
+					else return false;
+				}
+			}
+		}
+		else {
+			if (failsRequired == 1){
+				if (missionsFailed == 2) return true;
+				else if (missionsFailed == 1){
+					if (spiesOnTeam == 1){
+						if (random.nextInt(5) < 4) return true;
+						else return false;
+					else if (spiesOnTeam == 2){
+						if (random.nextInt(5) < 2) return true;
+						else return false;
+					}
+					else if (spiesOnTeam >= 3) return false;
+				}
+				else if (missionsFailed == 0){
+					if (spiesOnTeam == 1){
+						if (random.nextInt(5) < 3) return true;
+						else return false;
+					else if (spiesOnTeam == 2){
+						if (random.nextInt(5) < 1) return true;
+						else return false;
+					}
+					else if (spiesOnTeam == 3){
+						if (random.nextInt(10) < 1) return true;
+						else return false;
+					}
+				}
+			}
+			else if (failsRequired == 2){
+				if (missionsFailed == 2) return true;
+				// one mission failed is covered by 'every following round must be failed' contingency
+				// if no missions are failed and you're on the fourth mission, spies have already lost!
+				else return false;
+				}
+			}
+		}
 	}
 
 	/**
@@ -186,6 +271,14 @@ public class SimpleReflexAgent implements Agent{
 	* @param missionSuccess true if and only if the mission succeeded.
 	* **/
 	public void missionOutcome(int[] mission, int leader, int numFails, boolean missionSuccess){
+		int failsRequired = failsRequired();
+
+		if (numFails == 0) safetyLevel[leader]++;
+		else if (failsRequired == 1 && numFails == 1) safetyLevel[leader]--;
+		//else if (failsRequired == 1 && numFails == 2) safetyLevel[leader] stays the same
+		//else if (failsRequired == 2 && numFails == 1) safetyLevel[leader] stays the same
+		else if (failsRequired == 2 && numFails == 2) safetyLevel[leader] -= 2;
+
 		if (numFails > 0){
 			// if there was at least one fail,
 			// reduce all team members' safety score by 3 x the number of fails
@@ -211,6 +304,8 @@ public class SimpleReflexAgent implements Agent{
 	public void roundOutcome(int roundsComplete, int roundsLost){
 		//TODO
 		roundNum = roundsComplete + 1;
+		System.out.println(roundNum);
+		missionsFailed = roundsLost;
 	} 
 
 	/**
@@ -274,6 +369,22 @@ public class SimpleReflexAgent implements Agent{
 		return team;
 	}
 
+
+	/**
+	 * This method is called by spies to find out how many spies there are on the current mission.
+	 * @param mission the current mission
+	 * @return the number of spies on the current mission
+	 */
+	private int spiesOnTeam(int[] mission){
+		int spiesOnTeam = 0;
+
+		for (int i = 0; i < mission.length; i++){
+			if (spiesBool[mission[i]]) spiesOnTeam++;
+		}
+
+		return spiesOnTeam;
+	}
+
 	/**
 	 * This method returns the player indexes, sorted by their safety score (lowest to highest).
 	 * @return the sorted array of player indexes.
@@ -292,6 +403,10 @@ public class SimpleReflexAgent implements Agent{
 		}
 
 		return players;
+	}
+
+	private int failsRequired(){
+		return (numPlayers>6 && roundNum==4)?2:1;
 	}
 
 	private void printSafetyLevels(){
