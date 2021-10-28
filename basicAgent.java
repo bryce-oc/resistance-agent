@@ -1,17 +1,20 @@
 import javax.naming.OperationNotSupportedException;
 
+import java.util.*;
+import java.io.*;
+
 /**
  * A basic Java agent to play in Resistance.
  * @author Bryce O'Connor
  * **/
 
-public class BasicAgent{
+public class BasicAgent implements Agent{
 
   private String name;
   private static int agentCount;
 
   public BasicAgent(){
-    this.name == "basic" + agentCount;
+    this.name = "basic" + agentCount;
     agentCount++;
   }
 

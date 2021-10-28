@@ -1,5 +1,7 @@
 package cits3001_2021;
 
+import java.util.*;
+import java.io.*;
 import java.util.PriorityQueue;
 
 /**
@@ -188,7 +190,6 @@ public class SimpleReflexAgent implements Agent{
 	* @return true is the agent choses to betray (fail) the mission
 	* **/
 	public boolean betray(int[] mission, int leader){
-		//TODO
 		int spiesOnTeam = spiesOnTeam(mission);
 		int failsRequired = failsRequired();
 
@@ -196,71 +197,101 @@ public class SimpleReflexAgent implements Agent{
 		if (spiesOnTeam < failsRequired) return false;
 
 		// if EVERY mission from now on must be failed:
-		if ((6 - roundNum) == (3 - missionsFailed)) {
-			if (spiesOnTeam == 1) return true;
-			
-			if (failsRequired == 1){
-				if (spiesOnTeam == 2) {
-					if (random.nextInt(5) < 4) return true;
-					else return false;
-				}
-				else if (spiesOnTeam == 3) {
-					if (random.nextInt(5) < 3) return true;
-					else return false;
-				}
-				else if (spiesOnTeam == 4) {
-					if (random.nextInt(2) < 1) return true;
-					else return false;
-				}
-			}
-			else if (failsRequired == 2){
-				if (spiesOnTeam == 2) return true;
-				
-				else if (spiesOnTeam == 3) {
-					if (random.nextInt(6) < 5) return true;
-					else return false;
-				}
-				else if (spiesOnTeam == 4) {
-					if (random.nextInt(5) < 4) return true;
-					else return false;
-				}
+		if ((6 - roundNum) == (3 - missionsFailed)) {			
+			switch (failsRequired) {
+				case 1:
+					switch (spiesOnTeam) {
+						case 1:
+							return true;
+
+						case 2:
+							if (random.nextInt(5) < 4) return true;
+							else return false;
+
+						case 3:
+							if (random.nextInt(5) < 3) return true;
+							else return false;
+
+						case 4:
+							if (random.nextInt(2) < 1) return true;
+							else return false;
+					}
+
+				case 2:
+					switch (spiesOnTeam) {
+						case 2:
+							return true;
+
+						case 3:
+							if (random.nextInt(6) < 5) return true;
+							else return false;
+
+						case 4:
+							if (random.nextInt(5) < 4) return true;
+							else return false;
+					}
 			}
 		}
 		else {
-			if (failsRequired == 1){
-				if (missionsFailed == 2) return true;
-				else if (missionsFailed == 1){
-					if (spiesOnTeam == 1){
-						if (random.nextInt(5) < 4) return true;
-						else return false;
-					else if (spiesOnTeam == 2){
-						if (random.nextInt(5) < 2) return true;
-						else return false;
+			switch (failsRequired) {
+				case 1:
+					switch (missionsFailed){
+						case 0:
+							switch (spiesOnTeam) {
+								case 1:
+									if (random.nextInt(5) < 3) return true;
+									else return false;
+
+								case 2:
+									if (random.nextInt(5) < 1) return true;
+									else return false;
+
+								case 3:
+									if (random.nextInt(10) < 1) return true;
+									else return false;
+
+								case 4:
+									if (random.nextInt(2) < 1) return true;
+									else return false;
+							}
+
+						case 1:
+							switch (spiesOnTeam) {
+								case 1:
+									if (random.nextInt(5) < 4) return true;
+									else return false;
+
+								case 2:
+									if (random.nextInt(5) < 2) return true;
+									else return false;
+
+								case 3:
+									return false;
+
+								case 4:
+									return false;
+							}
+
+						case 2:
+							return true;
 					}
-					else if (spiesOnTeam >= 3) return false;
-				}
-				else if (missionsFailed == 0){
-					if (spiesOnTeam == 1){
-						if (random.nextInt(5) < 3) return true;
-						else return false;
-					else if (spiesOnTeam == 2){
-						if (random.nextInt(5) < 1) return true;
-						else return false;
+
+				case 2:
+					switch (missionsFailed){
+						case 2:
+							return true;
+
+						// one mission failed is covered by 'every following round must be failed' contingency
+						// if no missions are failed and you're on the fourth mission, spies have already lost!
+						default:
+							return false;
 					}
-					else if (spiesOnTeam == 3){
-						if (random.nextInt(10) < 1) return true;
-						else return false;
-					}
-				}
-			}
-			else if (failsRequired == 2){
-				if (missionsFailed == 2) return true;
-				// one mission failed is covered by 'every following round must be failed' contingency
-				// if no missions are failed and you're on the fourth mission, spies have already lost!
-				else return false;
-				}
 			}
 		}
+
+		// this is here so the compiler knows the function will definitely return something;
+		// however all cases should be caught by the switch cases above
+		return true;
 	}
 
 	/**
