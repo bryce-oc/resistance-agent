@@ -259,23 +259,49 @@ public class Game{
 	 * Sets up game with random agents and plays
 	 **/
 	public static void main(String[] args){
+        String[] argsToParse = args.clone();
+
         String gameType = "random";
         int numPlayers = 5;
+        boolean recorded = false;
+        int gamesToRun = 1;
 
-        if (args.length == 0){ 
+        if (argsToParse.length == 0){ 
             System.out.println("Defaulting to random agent 5-player game.");
         }
-		else if (args.length == 1){ 
-			gameType = args[0];
-            System.out.println("Unspecified game size, defaulting to 5-player game.");
-		}
-        else if (args.length == 2){
-            gameType = args[0];
-            numPlayers = Integer.parseInt(args[1]);
-        }
         else {
-            System.out.println("Wrong argument length ("+ args.length + "), defaulting to random agent 5-player game.");
+            if (argsToParse.length >= 1){
+                if (argsToParse[0].equals("record")){
+                    recorded = true;
+                    argsToParse = Arrays.copyOfRange(argsToParse, 1, argsToParse.length);
+                }
+            }
+
+            if (argsToParse.length >= 2){
+                if (argsToParse[0].equals("run")){
+                    gamesToRun = Integer.parseInt(argsToParse[1]);
+                    argsToParse = Arrays.copyOfRange(argsToParse, 2, argsToParse.length);
+                }
+            }
+
+            if (argsToParse.length == 0){ 
+                System.out.println("Defaulting to random agent 5-player game.");
+            }   
+            else if (argsToParse.length == 1){ 
+                gameType = argsToParse[0];
+                System.out.println("Unspecified game size, defaulting to 5-player game.");
+            }
+            else if (argsToParse.length == 2){
+                gameType = argsToParse[0];
+                numPlayers = Integer.parseInt(argsToParse[1]);
+            }
+            else {
+                System.out.println("Wrong argument length ("+ argsToParse.length + "), defaulting to random agent 5-player game.");
+            }
         }
+
+        if (numPlayers > 10) throw new RuntimeException("Too many players.");
+        else if (numPlayers < 5) throw new RuntimeException("Too few players.");
 
         Agent[] agents = new Agent[numPlayers];
         for (int i = 0; i < numPlayers; i++){
@@ -286,11 +312,26 @@ public class Game{
                 agents[i] = SimpleReflexAgent.init();
             }
             else if (gameType.equals("bayesian")){
+                agents[i] = BayesianBasic.init();
+            }
+            else if (gameType.equals("bayesianOLD")){
                 agents[i] = BayesianAgent.init();
             }
+            else {
+                throw new RuntimeException("Unknown agent type \"" + gameType + "\"");
+            }
         }
-		Game game = new Game(agents);
 
+        if (!recorded){
+    		for (int i = 0; i < gamesToRun; i++){
+                Game game = new Game(agents);
+            }
+        }
+        else {
+            for (int i = 0; i < gamesToRun; i++){
+                Game game = new Game("gameLog.txt", agents);
+            }
+        }
 	}    
 	
 
